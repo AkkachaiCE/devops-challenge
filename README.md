@@ -16,6 +16,11 @@ aws s3api list-buckets --endpoint-url=http://localhost:4566
 
 awslocal iam list-policies --scope Local
 
+curl -X POST "http://localhost:8000/upload" -F "file=@text.txt"
+
+awslocal s3 ls s3://logging-application-082929
+
+
 
 ## End Project
 

@@ -16,4 +16,34 @@ services:
     #   - ./init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
     #   - "./localstack:/var/lib/localstack"
     #   - "/var/run/docker.sock:/var/run/docker.sock"
+  
+  terraform:
+    image: hashicorp/terraform
+    container_name: terraform
+    platform: linux/arm64
+    env_file:
+      - .env.example
+    environment:
+      - DEBUG=1
+    volumes:
+      - ./terraform:/terraform
+    working_dir: /terraform
+    entrypoint: /bin/sh
+    command: -c "terraform init -input=false && terraform apply -auto-approve -input=false"
+    depends_on:
+      - localstack
+
+  app:
+    build:
+      context: ./application
+      dockerfile: Dockerfile
+    container_name: my_app
+    env_file:
+      - .env.example
+    ports:
+      - "8000:8000"
+    depends_on:
+      - localstack
+    # environment:
+      # - PYTHONUNBUFFERED=1
      
