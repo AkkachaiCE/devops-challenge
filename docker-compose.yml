@@ -1,0 +1,16 @@
+
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: aws-localstack
+    env_file:
+      - .env.example
+    ports:
+      - "4566:4566"
+      - "4571:4571"
+    environment:
+      - SERVICES=s3,ec2,iam,cloudwatch
+      - DEBUG=1
+    # volumes:
+    #   - "./localstack:/var/lib/localstack"
+    #   - "/var/run/docker.sock:/var/run/docker.sock"
