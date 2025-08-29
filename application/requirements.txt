@@ -1,5 +1,7 @@
 fastapi
 uvicorn
 boto3
-prometheus-client
+prometheus_client
+prometheus-fastapi-instrumentator
+psutil
 python-multipart

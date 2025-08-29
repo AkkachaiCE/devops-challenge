@@ -20,6 +20,9 @@ curl -X POST "http://localhost:8000/upload" -F "file=@text.txt"
 
 awslocal s3 ls s3://logging-application-082929
 
+curl http://localhost:8000/metrics
+
+
 
 
 ## End Project
