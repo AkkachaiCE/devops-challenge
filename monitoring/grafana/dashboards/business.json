@@ -1,0 +1,57 @@
+{
+  "id": null,
+  "title": "Business Metrics Panel",
+  "tags": [],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "title": "File Uploads",
+      "type": "graph",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "lines": true,
+      "points": false,
+      "targets": [
+        {
+          "expr": "file_uploads_total",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "S3 Total Objects",
+      "type": "graph",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "lines": true,
+      "points": false,
+      "targets": [
+        {
+          "expr": "s3_total_objects",
+          "legendFormat": "Objects",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "S3 Total Size",
+      "type": "graph",
+      "gridPos": { "x": 0, "y": 8, "w": 24, "h": 8 },
+      "lines": true,
+      "points": false,
+      "targets": [
+        {
+          "expr": "s3_total_size_bytes",
+          "legendFormat": "Size (bytes)",
+          "refId": "C"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 27,
+  "overwrite": true
+}

@@ -57,6 +57,7 @@ services:
     volumes:
       - ./monitoring/grafana/provisioning/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
       - ./monitoring/grafana/provisioning/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
-      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards
+      - ./monitoring/grafana/dashboards/infrastructure.json:/etc/grafana/dashboards/infrastructure/infrastructure.json
+      - ./monitoring/grafana/dashboards/business.json:/etc/grafana/dashboards/business/business.json
     depends_on:
       - prometheus

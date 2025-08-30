@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks
 from fastapi.responses import Response, PlainTextResponse
 from prometheus_client import (
     Counter,
@@ -13,6 +13,7 @@ import os
 import psutil
 import threading
 import time
+import multiprocessing
 
 app = FastAPI()
 
@@ -55,7 +56,7 @@ net_out = Gauge("network_out_bytes", "Network output bytes")
 def collect_system_metrics():
     while True:
         try:
-            cpu_usage.set(psutil.cpu_percent())
+            cpu_usage.set(psutil.cpu_percent(percpu=False))
             memory_usage.set(psutil.virtual_memory().percent)
 
             disk = psutil.disk_io_counters()
@@ -103,6 +104,13 @@ instrumentator = Instrumentator(
 )
 instrumentator.instrument(app).expose(app)
 
+# -------------------- CPU Stress Test --------------------
+def cpu_stress_worker(duration_seconds: int):
+    end_time = time.time() + duration_seconds
+    while time.time() < end_time:
+        _ = sum(i * i for i in range(10000))
+
+
 # -------------------- Endpoints --------------------
 @app.get("/health", response_class=PlainTextResponse)
 async def health():
@@ -129,6 +137,24 @@ async def upload(file: UploadFile = File(...)):
         upload_counter.labels(status="failure").inc()
         logger.error(f"Upload failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to upload file")
+    
+@app.get("/test", response_class=PlainTextResponse)
+async def stress_test():
+    """
+    Runs a CPU stress test for 30 seconds using multiprocessing.
+    """
+    duration = 30  # seconds
+    cpu_cores = multiprocessing.cpu_count()
+    processes = []
+
+    logger.info(f"Starting CPU stress test for {duration} seconds on {cpu_cores} cores.")
+
+    for _ in range(cpu_cores):
+        p = multiprocessing.Process(target=cpu_stress_worker, args=(duration,))
+        p.start()
+        processes.append(p)
+
+    return f"CPU stress test started for {duration} seconds using {cpu_cores} processes."
 
 # -------------------- Main --------------------
 if __name__ == "__main__":
