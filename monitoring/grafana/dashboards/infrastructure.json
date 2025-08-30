@@ -1,0 +1,81 @@
+{
+  "id": null,
+  "title": "Infrastructure Metrics Panel",
+  "tags": [],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "title": "CPU Usage",
+      "type": "graph",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "lines": true,
+      "points": false,
+      "targets": [
+        {
+          "expr": "cpu_usage_percent",
+          "legendFormat": "CPU",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Memory Usage",
+      "type": "graph",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "lines": true,
+      "points": false,
+      "targets": [
+        {
+          "expr": "memory_usage_percent",
+          "legendFormat": "Memory",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "Disk I/O",
+      "type": "graph",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "lines": true,
+      "points": false,
+      "targets": [
+        {
+          "expr": "disk_read_bytes",
+          "legendFormat": "Disk Read",
+          "refId": "C"
+        },
+        {
+          "expr": "disk_write_bytes",
+          "legendFormat": "Disk Write",
+          "refId": "D"
+        }
+      ]
+    },
+    {
+      "title": "Network I/O",
+      "type": "graph",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "lines": true,
+      "points": false,
+      "targets": [
+        {
+          "expr": "network_in_bytes",
+          "legendFormat": "Net In",
+          "refId": "E"
+        },
+        {
+          "expr": "network_out_bytes",
+          "legendFormat": "Net Out",
+          "refId": "F"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 27,
+  "overwrite": true
+}

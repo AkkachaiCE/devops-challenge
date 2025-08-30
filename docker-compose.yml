@@ -10,8 +10,8 @@ services:
       - "4571:4571"
     environment:
       - DEBUG=1
+      - SERVICES=s3,ec2,iam,cloudwatch
       # - DOCKER_HOST=unix:///var/run/docker.sock
-      # - SERVICES=s3,ec2,iam,cloudwatch
     # volumes:
     #   - ./init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
     #   - "./localstack:/var/lib/localstack"
@@ -61,11 +61,12 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - grafana-storage:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
-      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./monitoring/grafana/provisioning/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./monitoring/grafana/provisioning/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards
     depends_on:
       - prometheus
+
 
 volumes:
   grafana-storage:
