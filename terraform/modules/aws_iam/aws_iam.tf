@@ -1,10 +1,20 @@
+variable "user_name" {
+  type        = string
+  description = "Name of the IAM user"
+}
+
+variable "s3_bucket_name" {
+  type        = string
+  description = "Name of the S3 bucket to give access to"
+}
+
 resource "aws_iam_user" "application_user" {
-  name = "application"
+  name = var.user_name
 }
 
 resource "aws_iam_policy" "s3_rw_policy" {
-  name        = "application-s3-read-write"
-  description = "Allow read/write access to existing S3 bucket"
+  name        = "${var.user_name}-s3-read-write"
+  description = "Allow read/write access to S3 bucket ${var.s3_bucket_name}"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -18,8 +28,8 @@ resource "aws_iam_policy" "s3_rw_policy" {
           "s3:ListBucket"
         ]
         Resource = [
-          "arn:aws:s3:::logging-application-082929",
-          "arn:aws:s3:::logging-application-082929/*"
+          "arn:aws:s3:::${var.s3_bucket_name}",
+          "arn:aws:s3:::${var.s3_bucket_name}/*"
         ]
       }
     ]
@@ -29,4 +39,8 @@ resource "aws_iam_policy" "s3_rw_policy" {
 resource "aws_iam_user_policy_attachment" "attach_s3_policy" {
   user       = aws_iam_user.application_user.name
   policy_arn = aws_iam_policy.s3_rw_policy.arn
+}
+
+output "user_name" {
+  value = aws_iam_user.application_user.name
 }

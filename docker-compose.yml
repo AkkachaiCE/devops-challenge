@@ -11,16 +11,10 @@ services:
     environment:
       - DEBUG=1
       - SERVICES=s3,ec2,iam,cloudwatch
-      # - DOCKER_HOST=unix:///var/run/docker.sock
-    # volumes:
-    #   - ./init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
-    #   - "./localstack:/var/lib/localstack"
-    #   - "/var/run/docker.sock:/var/run/docker.sock"
   
   terraform:
     image: hashicorp/terraform
     container_name: terraform
-    platform: linux/arm64
     env_file:
       - .env.example
     environment:
@@ -28,8 +22,8 @@ services:
     volumes:
       - ./terraform:/terraform
     working_dir: /terraform
-    entrypoint: /bin/sh
-    command: -c "terraform init -input=false && terraform apply -auto-approve -input=false"
+    entrypoint: sh
+    command: ["-c", "terraform init -input=false && terraform apply -auto-approve -input=false -var-file=./environments/env.tfvars"]
     depends_on:
       - localstack
 
@@ -37,7 +31,7 @@ services:
     build:
       context: ./application
       dockerfile: Dockerfile
-    container_name: my_app
+    container_name: simple_app
     env_file:
       - .env.example
     ports:
@@ -66,7 +60,3 @@ services:
       - ./monitoring/grafana/dashboards:/etc/grafana/dashboards
     depends_on:
       - prometheus
-
-
-volumes:
-  grafana-storage:
