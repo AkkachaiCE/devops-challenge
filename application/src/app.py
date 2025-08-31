@@ -1,5 +1,6 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks
-from fastapi.responses import Response, PlainTextResponse
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.responses import Response, PlainTextResponse, JSONResponse
+from datetime import datetime,timezone
 from prometheus_client import (
     Counter,
     Gauge,
@@ -21,6 +22,14 @@ app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("app")
 
+# Log to local file
+log_file_path = "app.log"
+file_handler = logging.FileHandler(log_file_path)
+file_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
 # Add Prometheus counter for log lines
 log_lines = Counter("log_lines_total", "Total number of log lines")
 
@@ -36,9 +45,29 @@ s3 = boto3.client(
     aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
     aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
     region_name=os.getenv('AWS_REGION'),
-    endpoint_url=os.getenv('LOCALSTACK_URL', 'http://localstack:4566')
+    endpoint_url=os.getenv('LOCALSTACK_URL', 'http://localstack:4566')  # Optional: for local testing
 )
 bucket_name = os.getenv('S3_BUCKET_NAME')
+
+# -------------------- Upload Logs to S3 --------------------
+def upload_logs_to_s3(interval=5):  # Every 5 seconds
+    while True:
+        try:
+            if os.path.exists(log_file_path) and os.path.getsize(log_file_path) > 0:
+                timestamp = time.strftime('%Y-%m-%d_%H-%M-%S')
+                s3_key = f"logs/{timestamp}.log"
+
+                with open(log_file_path, "rb") as f:
+                    s3.upload_fileobj(f, bucket_name, s3_key)
+
+                # Clear the log file after upload
+                open(log_file_path, "w").close()
+
+                logger.info(f"Uploaded log file to S3: {s3_key}")
+        except Exception as e:
+            logger.warning(f"Failed to upload log file to S3: {e}")
+
+        time.sleep(interval)
 
 # -------------------- Custom Business Metrics --------------------
 upload_counter = Counter('file_uploads_total', 'Total number of uploaded files', ['status'])
@@ -95,6 +124,7 @@ def collect_s3_metrics():
 
 if bucket_name:
     threading.Thread(target=collect_s3_metrics, daemon=True).start()
+    threading.Thread(target=upload_logs_to_s3, daemon=True).start()
 
 # -------------------- Instrumentator --------------------
 instrumentator = Instrumentator(
@@ -110,12 +140,17 @@ def cpu_stress_worker(duration_seconds: int):
     while time.time() < end_time:
         _ = sum(i * i for i in range(10000))
 
-
 # -------------------- Endpoints --------------------
-@app.get("/health", response_class=PlainTextResponse)
+@app.get("/health", response_class=JSONResponse)
 async def health():
-    return "OK"
-
+    return {
+        "status": "ok",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "app": {
+            "name": "Simple_App",
+            "version": "1.0.0"
+        }
+    }
 @app.get("/metrics")
 async def metrics():
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
@@ -126,7 +161,7 @@ async def upload(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail="S3_BUCKET_NAME not set")
 
     content = await file.read()
-    key = file.filename
+    key = f"files/{file.filename}"
 
     try:
         s3.put_object(Bucket=bucket_name, Key=key, Body=content)
@@ -137,7 +172,7 @@ async def upload(file: UploadFile = File(...)):
         upload_counter.labels(status="failure").inc()
         logger.error(f"Upload failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to upload file")
-    
+
 @app.get("/test", response_class=PlainTextResponse)
 async def stress_test():
     """
